@@ -56,10 +56,15 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
         leftBack = hardwareMap.get(DcMotor.class, "left_back");
         rightBack = hardwareMap.get(DcMotor.class, "right_back");
 
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
         rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         waitForStart();
         runtime.reset();
@@ -69,14 +74,25 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
             double speed = gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double rotate = gamepad1.right_stick_x;
+            double motionspeed = 0.5;
+
+            if (gamepad1.left_trigger > 0.1 & gamepad1.right_trigger < 0.1)
+                motionspeed = 0.1;
+            else if (gamepad1.right_trigger > 0.1 & gamepad1.left_trigger < 0.1)
+                motionspeed = 0.75;
+            else if (gamepad1.right_trigger > 0.1 & gamepad1.left_trigger > 0.1)
+                motionspeed = 1;
+            else
+                motionspeed = 0.5;
+
 
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.
 
-            double leftFrontDir = Range.clip(speed + strafe + rotate, -1, 1);
-            double rightFrontDir = Range.clip(speed -strafe - rotate, -1, 1);
-            double leftBackDir = Range.clip(speed - strafe + rotate, -1, 1);
-            double rightBackDir = Range.clip(speed + strafe - rotate, -1, 1);
+            double leftFrontDir = Range.clip((speed - strafe - rotate)*motionspeed, -1, 1);
+            double rightFrontDir = Range.clip((speed + strafe + rotate)*motionspeed, -1, 1);
+            double leftBackDir = Range.clip((speed + strafe - rotate)*motionspeed, -1, 1);
+            double rightBackDir = Range.clip((speed - strafe + rotate)*motionspeed, -1, 1);
 
             leftFront.setPower(leftFrontDir);
             rightFront.setPower(rightFrontDir);
@@ -86,9 +102,9 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Central Velocity", speed);
-            telemetry.addData("Lateral Velocity", strafe);
-            telemetry.addData("Rotation", rotate);
+            telemetry.addData("Central Velocity", speed*motionspeed);
+            telemetry.addData("Lateral Velocity", strafe*motionspeed);
+            telemetry.addData("Rotation", rotate*motionspeed);
             telemetry.update();
 
         }
