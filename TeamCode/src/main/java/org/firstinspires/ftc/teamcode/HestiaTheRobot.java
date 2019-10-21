@@ -114,7 +114,7 @@ public class HestiaTheRobot
         // set any properties that apply to ALL motors
         for (DcMotor m : AllMotors) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
     }
 
@@ -138,7 +138,7 @@ public class HestiaTheRobot
     public void mecanum (double speed, double lateral, double rotate, boolean slowcondition, boolean fastcondition){
         //for
     }
-    public void motorspeed (double leftspeed, double rightspeed, boolean slowcondition, boolean fastcondition) {
+    public void tankdrive (double leftspeed, double rightspeed, boolean slowcondition, boolean fastcondition) {
         if (fastcondition) {
             for (DcMotor l : LeftMotors)
                 l.setPower(leftspeed);
