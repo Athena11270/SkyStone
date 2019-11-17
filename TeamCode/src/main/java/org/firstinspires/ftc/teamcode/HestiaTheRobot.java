@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -20,13 +21,16 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
 /**
@@ -49,6 +53,8 @@ public class HestiaTheRobot
     public DcMotor FR = null;
     public DcMotor BL = null;
     public DcMotor BR = null;
+
+    public Servo Towtruck = null;
 
     // create arrays for your motors (change sizes to match YOUR number of motors)
     public DcMotor[] LeftMotors = new DcMotor[2];
@@ -78,6 +84,10 @@ public class HestiaTheRobot
         BL = OpModeReference.hardwareMap.get(DcMotor.class, "left_back");
         BR = OpModeReference.hardwareMap.get(DcMotor.class, "right_back");
         imu = OpModeReference.hardwareMap.get(BNO055IMU.class, "imu");
+        Towtruck = OpModeReference.hardwareMap.get(Servo.class, "Towtruck");
+
+
+
 
         // initialize the IMU
         imu.initialize(parameters);
@@ -97,8 +107,8 @@ public class HestiaTheRobot
         AllMotors[3] = BR;
 
         // set the direction for all left, then all right motors
-        for (DcMotor m : LeftMotors)
-            m.setDirection(DcMotor.Direction.REVERSE);
+        FL.setDirection(DcMotor.Direction.REVERSE);
+        FR.setDirection(DcMotor.Direction.FORWARD);
         for (DcMotor m : RightMotors)
             m.setDirection(DcMotor.Direction.FORWARD);
 
@@ -109,31 +119,95 @@ public class HestiaTheRobot
         }
     }
 
+    public void mecanumOld (double speed, double strafe, double rotate, boolean fast, boolean slow) {
+        double movingSpeed = 1;
+        if (fast && !slow)
+            movingSpeed = 1;
+        else if (slow && !fast)
+            movingSpeed = 0.25;
+        else
+            movingSpeed = 0;
+
+        double leftFrontDir = Range.clip((speed - strafe - rotate), -1, 1) * movingSpeed;
+        double rightFrontDir = Range.clip((speed + strafe + rotate), -1, 1) * movingSpeed;
+        double leftBackDir = Range.clip((-speed + strafe - rotate), -1, 1) * movingSpeed;
+        double rightBackDir = Range.clip((-speed - strafe + rotate), -1, 1) * movingSpeed;
+
+        FL.setPower(leftFrontDir);
+        FR.setPower(rightFrontDir);
+        BL.setPower(leftBackDir);
+        BR.setPower(rightBackDir);
+        OpModeReference.telemetry.addData("Central Velocity", speed*movingSpeed);
+        OpModeReference.telemetry.addData("Lateral Velocity", strafe*movingSpeed);
+        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
+
+    }
+
     // just a method to stop driving
     public void stopDriving() {
         for (DcMotor m : AllMotors)
             m.setPower(0);
     }
 
-    public void drive (double inches) {
-        WriteTelemetry("Status", "starting drive method...");
-        Acceleration gravity;
-        WriteTelemetry("Status", "about to get gravity");
-        gravity = imu.getGravity();
+    public void driveOld (double inches) {
+    FR.setDirection(DcMotorSimple.Direction.REVERSE);
+    for (DcMotor m : AllMotors) {
+        m.setPower( 0.37);
+     }
+     OpModeReference.sleep(Math.round(1000*(inches/24)));
+     stopDriving();
+    }
 
-        WriteTelemetry("satus", "about to power motors");
+    public void multiDrive (double forwardblocks, double strafeblocks) {
+        double distance = Math.abs(Math.hypot(forwardblocks, strafeblocks));
+        double longest;
+        double x;
+        double y;
+        long ms;
+        if (Math.abs(forwardblocks) > Math.abs(strafeblocks)) {
+            longest = forwardblocks;
+            y = 1 * (forwardblocks/Math.abs(forwardblocks));
+            x = strafeblocks / longest;
+        }
+        else {
+            longest = strafeblocks;
+            x = 1 * (strafeblocks/Math.abs(strafeblocks));
+            y = forwardblocks / longest;
+        }
+        ms = Math.round(distance * 1000);
+
+        x = x * 0.56;
+        y = y * 0.37;
+
+        FL.setPower(y + x);
+        FR.setPower(y - x);
+        BL.setPower(y + x);
+        BR.setPower(y - x);
+
+        OpModeReference.sleep(ms);
+
+        stopDriving();
+    }
+
+    public void drive (double inches) {
+        //WriteTelemetry("Status", "starting drive method...");
+        Velocity fast;
+
+        fast = imu.getVelocity();
+
+        fast.toUnit(DistanceUnit.INCH);
+
+        //WriteTelemetry("satus", "about to power motors");
         for (DcMotor m : AllMotors){
             m.setPower(0.37);
 
         OpModeReference.sleep(100);
 
-        double meters = inches * 0.0254;
-        WriteTelemetry("status", "calculating velocity");
-        double vel = Math.sqrt(gravity.xAccel*gravity.xAccel+gravity.yAccel*gravity.yAccel);
-        long total = Math.round(vel/meters * 1000);
-        WriteTelemetry("Status","did the garbage");
-        //WriteTelemetry("sleep", total-500);
-        OpModeReference.sleep(total-100);
+
+        //WriteTelemetry("status", "calculating velocity");
+        double vel = Math.sqrt((fast.xVeloc*fast.xVeloc)+(fast.yVeloc*fast.yVeloc));
+
+
 
         stopDriving();
 
@@ -159,6 +233,11 @@ public class HestiaTheRobot
             angleDifference -=360;
 
         return angleDifference;
+    }
+
+    public void TowtruckControl () {
+        Towtruck.setPosition(Range.clip((1-OpModeReference.gamepad1.right_trigger),0,0.5));
+        OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
     }
 
 

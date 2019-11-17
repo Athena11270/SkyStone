@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -46,6 +47,7 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+    private Servo Towtruck = null;
 
     @Override
     public void runOpMode() {
@@ -56,10 +58,11 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotor.class, "right_front");
         leftBack = hardwareMap.get(DcMotor.class, "left_back");
         rightBack = hardwareMap.get(DcMotor.class, "right_back");
+        Towtruck = hardwareMap.get(Servo.class, "Towtruck");
 
-        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.FORWARD);
         rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -77,15 +80,14 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
             double rotate = gamepad1.right_stick_x;
             double motionspeed = 0.5;
 
-            if (gamepad1.left_trigger > 0.1 & gamepad1.right_trigger < 0.1)
-                motionspeed = 0.1;
-            else if (gamepad1.right_trigger > 0.1 & gamepad1.left_trigger < 0.1)
-                motionspeed = 0.75;
-            else if (gamepad1.right_trigger > 0.1 & gamepad1.left_trigger > 0.1)
+            if (gamepad1.left_bumper && !gamepad1.right_bumper)
+                motionspeed = 0.25;
+            else if (gamepad1.right_bumper && !gamepad1.left_bumper)
                 motionspeed = 1;
             else
                 motionspeed = 0.5;
 
+            Towtruck.setPosition(Range.clip((1-gamepad1.right_trigger),0,0.5));
 
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.
@@ -103,6 +105,7 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Towtruck Position", Towtruck.getPosition());
             telemetry.addData("Central Velocity", speed*motionspeed);
             telemetry.addData("Lateral Velocity", strafe*motionspeed);
             telemetry.addData("Rotation", rotate*motionspeed);
