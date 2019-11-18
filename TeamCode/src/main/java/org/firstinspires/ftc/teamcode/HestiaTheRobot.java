@@ -55,6 +55,8 @@ public class HestiaTheRobot
     public DcMotor BR = null;
 
     public Servo Towtruck = null;
+    public CRServo SL = null;
+    public CRServo SR = null;
 
     // create arrays for your motors (change sizes to match YOUR number of motors)
     public DcMotor[] LeftMotors = new DcMotor[2];
@@ -85,7 +87,8 @@ public class HestiaTheRobot
         BR = OpModeReference.hardwareMap.get(DcMotor.class, "right_back");
         imu = OpModeReference.hardwareMap.get(BNO055IMU.class, "imu");
         Towtruck = OpModeReference.hardwareMap.get(Servo.class, "Towtruck");
-
+        SL = OpModeReference.hardwareMap.get(CRServo.class, "LeftSlurp");
+        SR = OpModeReference.hardwareMap.get(CRServo.class, "RightSlurp");
 
 
 
@@ -107,10 +110,13 @@ public class HestiaTheRobot
         AllMotors[3] = BR;
 
         // set the direction for all left, then all right motors
-        FL.setDirection(DcMotor.Direction.REVERSE);
-        FR.setDirection(DcMotor.Direction.FORWARD);
+        for (DcMotor m : LeftMotors)
+            m.setDirection(DcMotor.Direction.REVERSE);
         for (DcMotor m : RightMotors)
             m.setDirection(DcMotor.Direction.FORWARD);
+
+        SL.setDirection(CRServo.Direction.REVERSE);
+        SR.setDirection(CRServo.Direction.FORWARD);
 
         // set any properties that apply to ALL motors
         for (DcMotor m : AllMotors) {
@@ -119,28 +125,76 @@ public class HestiaTheRobot
         }
     }
 
-    public void mecanumOld (double speed, double strafe, double rotate, boolean fast, boolean slow) {
-        double movingSpeed = 1;
-        if (fast && !slow)
-            movingSpeed = 1;
-        else if (slow && !fast)
-            movingSpeed = 0.25;
+    public void SlurpyIntake() {
+        double power = 0;
+        if (OpModeReference.gamepad1.right_trigger > 0.1 && OpModeReference.gamepad1.left_trigger < 0.1) {
+            power = 1;
+        }
+        else if (OpModeReference.gamepad1.right_trigger < 0.1 && OpModeReference.gamepad1.left_trigger > 0.1) {
+            power = -1;
+        }
+        else {
+            power = 0;
+        }
+        SL.setPower(power);
+        SR.setPower(power);
+    }
+
+    public void mecanumbad() {
+
+        double motionspeed = 0.5;
+
+        if (OpModeReference.gamepad1.left_trigger > 0.1 & OpModeReference.gamepad1.right_trigger < 0.1)
+            motionspeed = 0.1;
+        else if (OpModeReference.gamepad1.right_trigger > 0.1 & OpModeReference.gamepad1.left_trigger < 0.1)
+            motionspeed = 0.75;
+        else if (OpModeReference.gamepad1.right_trigger > 0.1 & OpModeReference.gamepad1.left_trigger > 0.1)
+            motionspeed = 1;
         else
-            movingSpeed = 0;
+            motionspeed = 0.5;
+
+        double r = Math.hypot(OpModeReference.gamepad1.left_stick_x, OpModeReference.gamepad1.left_stick_y);
+        double robotAngle = Math.atan2(OpModeReference.gamepad1.left_stick_y, OpModeReference.gamepad1.left_stick_x) - Math.PI / 4;
+        double rightX = OpModeReference.gamepad1.right_stick_x;
+        final double v1 = (r * Math.sin(robotAngle) - rightX) * motionspeed;
+        final double v2 = (r * Math.cos(robotAngle) + rightX) * motionspeed;
+        final double v3 = (r * Math.cos(robotAngle) - rightX) * motionspeed;
+        final double v4 = (r * Math.sin(robotAngle) + rightX) * motionspeed;
+
+        FL.setPower(v1);
+        FR.setPower(v2);
+        BL.setPower(v3);
+        BR.setPower(v4);
+
+    }
+
+    public void mecanum () {
+
+        double speed = OpModeReference.gamepad1.left_stick_y / Math.sqrt(2);
+        double strafe = OpModeReference.gamepad1.left_stick_x;
+        double rotate = OpModeReference.gamepad1.right_stick_x;
+        double movingSpeed = 1;
+
+        if (OpModeReference.gamepad1.left_bumper) {
+            movingSpeed = 0.5;
+        }
+        else {
+            movingSpeed = 1;
+        }
 
         double leftFrontDir = Range.clip((speed - strafe - rotate), -1, 1) * movingSpeed;
         double rightFrontDir = Range.clip((speed + strafe + rotate), -1, 1) * movingSpeed;
-        double leftBackDir = Range.clip((-speed + strafe - rotate), -1, 1) * movingSpeed;
-        double rightBackDir = Range.clip((-speed - strafe + rotate), -1, 1) * movingSpeed;
+        double leftBackDir = Range.clip((speed + strafe - rotate), -1, 1) * movingSpeed;
+        double rightBackDir = Range.clip((speed - strafe + rotate), -1, 1) * movingSpeed;
 
         FL.setPower(leftFrontDir);
         FR.setPower(rightFrontDir);
         BL.setPower(leftBackDir);
         BR.setPower(rightBackDir);
-        OpModeReference.telemetry.addData("Central Velocity", speed*movingSpeed);
-        OpModeReference.telemetry.addData("Lateral Velocity", strafe*movingSpeed);
-        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
 
+//        OpModeReference.telemetry.addData("Central Velocity", speed*movingSpeed);
+//        OpModeReference.telemetry.addData("Lateral Velocity", strafe*movingSpeed);
+//        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
     }
 
     // just a method to stop driving
@@ -189,88 +243,19 @@ public class HestiaTheRobot
         stopDriving();
     }
 
-    public void drive (double inches) {
-        //WriteTelemetry("Status", "starting drive method...");
-        Velocity fast;
-
-        fast = imu.getVelocity();
-
-        fast.toUnit(DistanceUnit.INCH);
-
-        //WriteTelemetry("satus", "about to power motors");
-        for (DcMotor m : AllMotors){
-            m.setPower(0.37);
-
-        OpModeReference.sleep(100);
-
-
-        //WriteTelemetry("status", "calculating velocity");
-        double vel = Math.sqrt((fast.xVeloc*fast.xVeloc)+(fast.yVeloc*fast.yVeloc));
-
-
-
-        stopDriving();
-
-        }
-
-    }
-
-    // This method calculates the difference of the current angle from the start angle
-    // If you're left of your original angle, the value will be POSITIVE
-    // If you're right of your original angle, the value will be NEGATIVE
-    public double getAngleDifference(double startAngle) {
-
-        Orientation angles;
-        angles = imu.getAngularOrientation();
-
-        double angleDifference = angles.thirdAngle - startAngle;
-
-        // handle going past the 0 or 180 barriers
-        // where we switch from positive to negative or vice versa
-        if (angleDifference < -180)
-            angleDifference += 360;
-        else if (angleDifference > 180)
-            angleDifference -=360;
-
-        return angleDifference;
-    }
-
     public void TowtruckControl () {
-        Towtruck.setPosition(Range.clip((1-OpModeReference.gamepad1.right_trigger),0,0.5));
+        double TTpos;
+        if (OpModeReference.gamepad1.right_bumper)
+            TTpos = 0.5;
+        else
+            TTpos = 0.1;
+        Towtruck.setPosition(TTpos);
         OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
     }
 
 
-    public void turn(double targetAngleDifference) {
-
-        Orientation angles;
-        angles = imu.getAngularOrientation();
-
-        double direction = targetAngleDifference/Math.abs(targetAngleDifference*targetAngleDifference);
-        double startingAngle = angles.thirdAngle;
-
-        while (getAngleDifference(startingAngle) < Math.abs(targetAngleDifference*0.75)){
-            for (DcMotor m : LeftMotors){
-                m.setPower(-0.5*direction);
-            }
-            for (DcMotor m : RightMotors){
-                m.setPower(0.5*direction);
-            }
-        }
-        while (getAngleDifference(startingAngle) < Math.abs(targetAngleDifference)){
-            for (DcMotor m : LeftMotors){
-                m.setPower(-0.25*direction);
-            }
-            for (DcMotor m : RightMotors){
-                m.setPower(0.25*direction);
-            }
-        }
-        stopDriving();
-    }
-
     public void WriteTelemetry(String caption, Object value){
         OpModeReference.telemetry.addData(caption, value);
-        OpModeReference.telemetry.update();
     }
 }
 

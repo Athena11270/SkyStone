@@ -38,8 +38,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="NewDrivs", group="Linear Opmode")
-public class NewDrive extends LinearOpMode {
+@TeleOp(name="Better Drive", group="Linear Opmode")
+public class GayDrive extends LinearOpMode {
 
 
     @Override
@@ -49,8 +49,9 @@ public class NewDrive extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()){
-            hestia.mecanumOld(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_y, gamepad1.left_bumper, gamepad1.right_bumper);
+            hestia.mecanum();
             hestia.TowtruckControl();
+            hestia.SlurpyIntake();
             telemetry.update();
         }
 

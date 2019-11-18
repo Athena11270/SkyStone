@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-
+@Disabled
 @TeleOp(name="supercalafraglisticexspialadocius", group="Linear Opmode")
 public class supercalafraglisticexspialadocius extends LinearOpMode {
 
@@ -62,7 +62,7 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
 
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -87,7 +87,7 @@ public class supercalafraglisticexspialadocius extends LinearOpMode {
             else
                 motionspeed = 0.5;
 
-            Towtruck.setPosition(Range.clip((1-gamepad1.right_trigger),0,0.5));
+            Towtruck.setPosition(Range.clip((gamepad1.right_trigger),0.1,0.5));
 
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.

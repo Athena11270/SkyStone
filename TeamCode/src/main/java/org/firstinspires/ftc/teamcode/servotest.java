@@ -34,18 +34,20 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Disabled
-@TeleOp(name="StolenFromHiccopampus", group="Linear Opmode")
-public class Stolen extends LinearOpMode {
+@TeleOp(name="servotest", group="Linear Opmode")
+public class servotest extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFront = null;
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+    private Servo Towtruck = null;
 
     @Override
     public void runOpMode() {
@@ -56,10 +58,11 @@ public class Stolen extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotor.class, "right_front");
         leftBack = hardwareMap.get(DcMotor.class, "left_back");
         rightBack = hardwareMap.get(DcMotor.class, "right_back");
+        Towtruck = hardwareMap.get(Servo.class, "Towtruck");
 
-        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.FORWARD);
         rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -72,32 +75,40 @@ public class Stolen extends LinearOpMode {
 
         while (opModeIsActive()) {
 
+            double speed = gamepad1.left_stick_y;
+            double strafe = gamepad1.left_stick_x;
+            double rotate = gamepad1.right_stick_x;
             double motionspeed = 0.5;
 
-            if (gamepad1.left_trigger > 0.1 & gamepad1.right_trigger < 0.1)
-                motionspeed = 0.1;
-            else if (gamepad1.right_trigger > 0.1 & gamepad1.left_trigger < 0.1)
-                motionspeed = 0.75;
-            else if (gamepad1.right_trigger > 0.1 & gamepad1.left_trigger > 0.1)
+            if (gamepad1.left_bumper && !gamepad1.right_bumper)
+                motionspeed = 0.25;
+            else if (gamepad1.right_bumper && !gamepad1.left_bumper)
                 motionspeed = 1;
             else
                 motionspeed = 0.5;
 
-            double r = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-            double robotAngle = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
-            double rightX = gamepad1.right_stick_x;
-            final double v1 = r * Math.cos(robotAngle) + rightX * motionspeed;
-            final double v2 = r * Math.sin(robotAngle) - rightX * motionspeed;
-            final double v3 = r * Math.sin(robotAngle) + rightX * motionspeed;
-            final double v4 = r * Math.cos(robotAngle) - rightX * motionspeed;
+            Towtruck.setPosition(Range.clip((gamepad1.right_trigger),0,0.3));
 
-            leftFront.setPower(v1);
-            rightFront.setPower(v2);
-            leftBack.setPower(v3);
-            rightBack.setPower(v4);
+            // Choose to drive using either Tank Mode, or POV Mode
+            // Comment out the method that's not used.  The default below is POV.
+
+            double leftFrontDir = Range.clip((speed - strafe - rotate)*motionspeed, -1, 1);
+            double rightFrontDir = Range.clip((speed + strafe + rotate)*motionspeed, -1, 1);
+            double leftBackDir = Range.clip((speed + strafe - rotate)*motionspeed, -1, 1);
+            double rightBackDir = Range.clip((speed - strafe + rotate)*motionspeed, -1, 1);
+
+            leftFront.setPower(leftFrontDir);
+            rightFront.setPower(rightFrontDir);
+            leftBack.setPower(leftBackDir);
+            rightBack.setPower(rightBackDir);
+
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Towtruck Position", Towtruck.getPosition());
+            telemetry.addData("Central Velocity", speed*motionspeed);
+            telemetry.addData("Lateral Velocity", strafe*motionspeed);
+            telemetry.addData("Rotation", rotate*motionspeed);
             telemetry.update();
 
         }
