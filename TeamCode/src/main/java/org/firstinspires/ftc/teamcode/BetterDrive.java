@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.util.Range;
 
 
 @TeleOp(name="Better Drive", group="Linear Opmode")
-public class GayDrive extends LinearOpMode {
+public class BetterDrive extends LinearOpMode {
 
 
     @Override
