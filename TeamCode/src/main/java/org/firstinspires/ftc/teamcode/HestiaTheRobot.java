@@ -63,6 +63,12 @@ public class HestiaTheRobot
     public DcMotor[] RightMotors = new DcMotor[2];
     public DcMotor[] AllMotors = new DcMotor[4];
 
+    // define and calculate constants...
+    static final double     COUNTS_PER_MOTOR_REV    = 537.6;    // REV Hex HD 20:1
+    static final double     WHEEL_DIAMETER_INCHES   = 3.93701;     // For figuring circumference
+    static final double     WHEEL_CIRCUMFERENCE_INCHES = WHEEL_DIAMETER_INCHES * Math.PI;
+    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV  / WHEEL_CIRCUMFERENCE_INCHES);
+
     // you will need a reference to your OpMode
     private LinearOpMode OpModeReference;
 
@@ -90,11 +96,8 @@ public class HestiaTheRobot
         SL = OpModeReference.hardwareMap.get(CRServo.class, "LeftSlurp");
         SR = OpModeReference.hardwareMap.get(CRServo.class, "RightSlurp");
 
-
-
         // initialize the IMU
         imu.initialize(parameters);
-
 
         // now add each motor to your motor arrays (this example only has 2 motors)
         // left
@@ -125,93 +128,229 @@ public class HestiaTheRobot
         }
     }
 
-    public void SlurpyIntake() {
-        double power = 0;
-        if (OpModeReference.gamepad1.right_trigger > 0.1 && OpModeReference.gamepad1.left_trigger < 0.1) {
-            power = 1;
-        }
-        else if (OpModeReference.gamepad1.right_trigger < 0.1 && OpModeReference.gamepad1.left_trigger > 0.1) {
-            power = -1;
-        }
-        else {
-            power = 0;
-        }
-        SL.setPower(power);
-        SR.setPower(power);
-    }
-
-    public void mecanumbad() {
-
-        double motionspeed = 0.5;
-
-        if (OpModeReference.gamepad1.left_trigger > 0.1 & OpModeReference.gamepad1.right_trigger < 0.1)
-            motionspeed = 0.1;
-        else if (OpModeReference.gamepad1.right_trigger > 0.1 & OpModeReference.gamepad1.left_trigger < 0.1)
-            motionspeed = 0.75;
-        else if (OpModeReference.gamepad1.right_trigger > 0.1 & OpModeReference.gamepad1.left_trigger > 0.1)
-            motionspeed = 1;
-        else
-            motionspeed = 0.5;
-
-        double r = Math.hypot(OpModeReference.gamepad1.left_stick_x, OpModeReference.gamepad1.left_stick_y);
-        double robotAngle = Math.atan2(OpModeReference.gamepad1.left_stick_y, OpModeReference.gamepad1.left_stick_x) - Math.PI / 4;
-        double rightX = OpModeReference.gamepad1.right_stick_x;
-        final double v1 = (r * Math.sin(robotAngle) - rightX) * motionspeed;
-        final double v2 = (r * Math.cos(robotAngle) + rightX) * motionspeed;
-        final double v3 = (r * Math.cos(robotAngle) - rightX) * motionspeed;
-        final double v4 = (r * Math.sin(robotAngle) + rightX) * motionspeed;
-
-        FL.setPower(v1);
-        FR.setPower(v2);
-        BL.setPower(v3);
-        BR.setPower(v4);
-
-    }
-
-    public void mecanum () {
-
-        double speed = OpModeReference.gamepad1.left_stick_y / Math.sqrt(2);
-        double strafe = OpModeReference.gamepad1.left_stick_x;
-        double rotate = OpModeReference.gamepad1.right_stick_x;
-        double movingSpeed = 1;
-
-        if (OpModeReference.gamepad1.left_bumper) {
-            movingSpeed = 0.5;
-        }
-        else {
-            movingSpeed = 1;
-        }
-
-        double leftFrontDir = Range.clip((speed - strafe - rotate), -1, 1) * movingSpeed;
-        double rightFrontDir = Range.clip((speed + strafe + rotate), -1, 1) * movingSpeed;
-        double leftBackDir = Range.clip((speed + strafe - rotate), -1, 1) * movingSpeed;
-        double rightBackDir = Range.clip((speed - strafe + rotate), -1, 1) * movingSpeed;
-
-        FL.setPower(leftFrontDir);
-        FR.setPower(rightFrontDir);
-        BL.setPower(leftBackDir);
-        BR.setPower(rightBackDir);
-
-//        OpModeReference.telemetry.addData("Central Velocity", speed*movingSpeed);
-//        OpModeReference.telemetry.addData("Lateral Velocity", strafe*movingSpeed);
-//        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
-    }
-
     // just a method to stop driving
     public void stopDriving() {
         for (DcMotor m : AllMotors)
             m.setPower(0);
     }
 
-    public void driveOld (double inches) {
-    FR.setDirection(DcMotorSimple.Direction.REVERSE);
-    for (DcMotor m : AllMotors) {
-        m.setPower( 0.37);
-     }
-     OpModeReference.sleep(Math.round(1000*(inches/24)));
-     stopDriving();
+    // this is a drive method - takes speed and inches
+    // WARNING: YOU WILL NEED TO IMPLEMENT REVERSE
+    public void drive(double speed, double inches) {
+        // Ensure that the opmode is still active
+        if (OpModeReference.opModeIsActive()) {
+
+            // calculate the number of ticks you want to travel (cast to integer)
+            int targetTicks = (int) (inches * COUNTS_PER_INCH);
+
+            // reset ticks to 0 on all motors
+            for (DcMotor m : AllMotors)
+                m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            // set target position on all motors
+            // mode must be changed to RUN_TO_POSITION
+            for(DcMotor m : AllMotors) {
+                m.setTargetPosition(targetTicks);
+                m.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+
+            // turn all motors on!
+            for (DcMotor m : LeftMotors)
+                m.setPower(speed/2);
+            for (DcMotor m : RightMotors)
+                m.setPower(speed/2);
+
+            // just keep looping while both motors are busy
+            // stop if driver station stop button pushed
+            while (OpModeReference.opModeIsActive() && ((FL.isBusy() && FR.isBusy()) && (BL.isBusy() && BR.isBusy()))) {
+                OpModeReference.telemetry.addData("target ticks", targetTicks);
+                OpModeReference.telemetry.addData("right current", FR.getCurrentPosition());
+                OpModeReference.telemetry.addData("left current", FL.getCurrentPosition());
+                OpModeReference.telemetry.update();
+            }
+
+            // once all motors get to where they need to be, turn them off
+            stopDriving();
+
+            // set motors back to RUN_USING_ENCODERS
+            for (DcMotor m : AllMotors)
+                m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+    public void strafeRight(double inches, double speed) {
+        strafe(inches, speed);
     }
 
+    public void strafeLeft(double inches, double speed) {
+        strafe(-inches, speed);
+    }
+    //THIS ARE IS A STRAFING METHOD
+    private void strafe(double inches, double speed) {
+        if (OpModeReference.opModeIsActive()) {
+
+            // calculate the number of ticks you want to travel (cast to integer)
+            int targetTicks = (int) Math.round(COUNTS_PER_INCH * inches * Math.sqrt(2));
+
+            // reset ticks to 0 on all motors
+            for (DcMotor m : AllMotors)
+                m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            // set target position on all motors
+            // mode must be changed to RUN_TO_POSITION
+            for(DcMotor m : AllMotors) {
+                m.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+            FL.setTargetPosition(targetTicks);
+            FR.setTargetPosition(-targetTicks);
+            BL.setTargetPosition(-targetTicks);
+            BR.setTargetPosition(targetTicks);
+
+            // turn all motors on!
+            for (DcMotor m : AllMotors)
+                m.setPower(speed);
+
+
+            // just keep looping while both motors are busy
+            // stop if driver station stop button pushed
+            while (OpModeReference.opModeIsActive() && ((FL.isBusy() && FR.isBusy()) && (BL.isBusy() && BR.isBusy()))) {
+                OpModeReference.telemetry.addData("target ticks", targetTicks);
+                OpModeReference.telemetry.addData("right current", FR.getCurrentPosition());
+                OpModeReference.telemetry.addData("left current", FL.getCurrentPosition());
+                OpModeReference.telemetry.update();
+            }
+
+            // once all motors get to where they need to be, turn them off
+            stopDriving();
+
+            // set motors back to RUN_USING_ENCODERS
+            for (DcMotor m : AllMotors)
+                m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+
+
+    // This method makes the robot turn.
+    // DO NOT try to turn more than 180 degrees in either direction
+    // targetAngleDifference is the number of degrees you want to turn
+    // should be positive if turning left, negative if turning right
+    public void turn(double targetAngleDifference, double power) {
+
+        // before starting the turn, take note of current angle as startAngle
+        double startAngle = GetCurrentZAngle();
+
+        // just some boolean variables to tell if we've stepped motor power down
+        // might actually want more than two steps
+        boolean firstStepDownComplete = false;
+        boolean secondStepDownComplete = false;
+
+        // if target angle is Negative, we're turning RIGHT
+        if (targetAngleDifference < 0) {
+            // turning right, so we want all right motors going backwards
+            for (DcMotor m : RightMotors)
+                m.setPower(-power/2);
+            for (DcMotor m : LeftMotors)
+                m.setPower(power/2);
+            // sleep a tenth of a second
+            // WARNING - not sure why this is needed - but sometimes right turns didn't work without
+            OpModeReference.sleep(100);
+
+            // we're turning right, so our target angle difference will be negative (ex: -90)
+            // so GetAngleDifference will go from 0 to -90
+            // keep turning while difference is greater than target
+            while (OpModeReference.opModeIsActive() && GetAngleDifference(startAngle) > targetAngleDifference) {
+
+                // THIS CODE IS FOR STEPPING DOWN MOTOR POWER
+                if (!secondStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.75) {
+                    for (DcMotor m : RightMotors)
+                        m.setPower(-power/4);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(power/4);
+                    secondStepDownComplete = true;
+                } else if (!firstStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.50) {
+                    for (DcMotor m : RightMotors)
+                        m.setPower(-power/2);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(power/2);
+                    firstStepDownComplete = true;
+                }
+
+                OpModeReference.telemetry.addData("target", targetAngleDifference);
+                OpModeReference.telemetry.addData("current", GetAngleDifference(startAngle));
+                OpModeReference.telemetry.addData("LeftMotorPower", FL.getPower());
+                OpModeReference.telemetry.addData("RightMotorPower", FR.getPower());
+                OpModeReference.telemetry.update();
+            }
+            // if targetAngleDifference is Positive, we're turning LEFT
+        } else if (targetAngleDifference > 0) {
+            // turning left so want all left motors going backwards
+            for (DcMotor m : RightMotors)
+                m.setPower(power);
+            for (DcMotor m : LeftMotors)
+                m.setPower(-power);
+
+            // WARNING not sure if this sleep is needed - seemed necessary for right turns
+            OpModeReference.sleep (100);
+
+            // we're turning right, so our target angle difference will be positive (ex: 90)
+            // so GetAngleDifference will go from 0 to 90
+            // keep turning while difference is less than target
+            while (OpModeReference.opModeIsActive() && GetAngleDifference(startAngle) < targetAngleDifference) {
+
+                // THIS CODE IS FOR STEPPING DOWN MOTOR POWER
+                if (!secondStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.75) {
+                    for (DcMotor m : RightMotors)
+                        m.setPower(power/4);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(-power/4);
+                    secondStepDownComplete = true;
+                } else if (!firstStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.50) {
+                    for (DcMotor m : RightMotors)
+                        m.setPower(power/2);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(-power/2);
+                    firstStepDownComplete = true;
+                }
+                OpModeReference.telemetry.addData("target", targetAngleDifference);
+                OpModeReference.telemetry.addData("current", GetAngleDifference(startAngle));
+                OpModeReference.telemetry.addData("LeftMotorPower", FL.getPower());
+                OpModeReference.telemetry.addData("RightMotorPower", FR.getPower());
+                OpModeReference.telemetry.update();
+            }
+        } else {
+            // is zero - not turning - just return
+            return;
+        }
+
+        // turn all motors off
+        stopDriving();
+    }
+
+    // this is a method to get the current heading/z angle from the IMU
+    // WE WANT THE Z ANGLE :)
+    // AxesOrder.XYZ means we want thirdAngle
+    // AxesOrder.ZYX would mean we want firstAngle
+    public double GetCurrentZAngle() {
+        Orientation currentAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+        return currentAngles.thirdAngle;
+    }
+
+    // This method calculates the difference of the current angle from the start angle
+    // If you're left of your original angle, the value will be POSITIVE
+    // If you're right of your original angle, the value will be NEGATIVE
+    public double GetAngleDifference(double startAngle) {
+        double angleDifference = GetCurrentZAngle() - startAngle;
+
+        // handle going past the 0 or 180 barriers
+        // where we switch from positive to negative or vice versa
+        if (angleDifference < -180)
+            angleDifference += 360;
+        else if (angleDifference > 180)
+            angleDifference -=360;
+
+        return angleDifference;
+    }
+
+    // future method to drive more better with curving, yo.
     public void multiDrive (double forwardblocks, double strafeblocks) {
         double distance = Math.abs(Math.hypot(forwardblocks, strafeblocks));
         double longest;
@@ -243,6 +382,37 @@ public class HestiaTheRobot
         stopDriving();
     }
 
+    /// ********************** TELE-OP Methods ************************************
+
+    public void mecanum () {
+
+        double speed = OpModeReference.gamepad1.left_stick_y / Math.sqrt(2);
+        double strafe = OpModeReference.gamepad1.left_stick_x;
+        double rotate = OpModeReference.gamepad1.right_stick_x;
+        double movingSpeed = 0.6;
+
+        if (OpModeReference.gamepad1.left_bumper) {
+            movingSpeed = 0.3;
+        }
+        else {
+            movingSpeed = 0.6;
+        }
+
+        double leftFrontDir = Range.clip((speed - strafe - rotate), -1, 1) * movingSpeed;
+        double rightFrontDir = Range.clip((speed + strafe + rotate), -1, 1) * movingSpeed;
+        double leftBackDir = Range.clip((speed + strafe - rotate), -1, 1) * movingSpeed;
+        double rightBackDir = Range.clip((speed - strafe + rotate), -1, 1) * movingSpeed;
+
+        FL.setPower(leftFrontDir);
+        FR.setPower(rightFrontDir);
+        BL.setPower(leftBackDir);
+        BR.setPower(rightBackDir);
+
+//        OpModeReference.telemetry.addData("Central Velocity", speed*movingSpeed);
+//        OpModeReference.telemetry.addData("Lateral Velocity", strafe*movingSpeed);
+//        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
+    }
+
     public void TowtruckControl () {
         double TTpos;
         if (OpModeReference.gamepad1.right_bumper)
@@ -253,9 +423,19 @@ public class HestiaTheRobot
         OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
     }
 
-
-    public void WriteTelemetry(String caption, Object value){
-        OpModeReference.telemetry.addData(caption, value);
+    public void SlurpyIntake() {
+        double power = 0;
+        if (OpModeReference.gamepad1.right_trigger > 0.1 && OpModeReference.gamepad1.left_trigger < 0.1) {
+            power = 1;
+        }
+        else if (OpModeReference.gamepad1.right_trigger < 0.1 && OpModeReference.gamepad1.left_trigger > 0.1) {
+            power = -1;
+        }
+        else {
+            power = 0;
+        }
+        SL.setPower(power);
+        SR.setPower(power);
     }
 }
 

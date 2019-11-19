@@ -30,7 +30,7 @@ public class autotest extends LinearOpMode {
 
         waitForStart();
 
-        hestia.multiDrive(1,1);
-        hestia.multiDrive(-1,-1);
+
+
     }
 }
