@@ -136,12 +136,12 @@ public class HestiaTheRobot
 
     // this is a drive method - takes speed and inches
     // WARNING: YOU WILL NEED TO IMPLEMENT REVERSE
-    public void drive(double speed, double inches) {
+    public void drive(double inches, double speed) {
         // Ensure that the opmode is still active
         if (OpModeReference.opModeIsActive()) {
 
             // calculate the number of ticks you want to travel (cast to integer)
-            int targetTicks = (int) (inches * COUNTS_PER_INCH);
+            int targetTicks = (int) (-inches * COUNTS_PER_INCH);
 
             // reset ticks to 0 on all motors
             for (DcMotor m : AllMotors)
@@ -155,9 +155,7 @@ public class HestiaTheRobot
             }
 
             // turn all motors on!
-            for (DcMotor m : LeftMotors)
-                m.setPower(speed/2);
-            for (DcMotor m : RightMotors)
+            for (DcMotor m : AllMotors)
                 m.setPower(speed/2);
 
             // just keep looping while both motors are busy
@@ -184,12 +182,12 @@ public class HestiaTheRobot
     public void strafeLeft(double inches, double speed) {
         strafe(-inches, speed);
     }
-    //THIS ARE IS A STRAFING METHOD
+    //THIS ARE IS AN STRAFING METHOD
     private void strafe(double inches, double speed) {
         if (OpModeReference.opModeIsActive()) {
 
             // calculate the number of ticks you want to travel (cast to integer)
-            int targetTicks = (int) Math.round(COUNTS_PER_INCH * inches * Math.sqrt(2));
+            int targetTicks = (int) (COUNTS_PER_INCH * -inches);
 
             // reset ticks to 0 on all motors
             for (DcMotor m : AllMotors)
@@ -198,6 +196,7 @@ public class HestiaTheRobot
             // set target position on all motors
             // mode must be changed to RUN_TO_POSITION
             for(DcMotor m : AllMotors) {
+
                 m.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
             FL.setTargetPosition(targetTicks);
@@ -207,15 +206,15 @@ public class HestiaTheRobot
 
             // turn all motors on!
             for (DcMotor m : AllMotors)
-                m.setPower(speed);
+                m.setPower(speed/Math.sqrt(2));
 
 
             // just keep looping while both motors are busy
             // stop if driver station stop button pushed
             while (OpModeReference.opModeIsActive() && ((FL.isBusy() && FR.isBusy()) && (BL.isBusy() && BR.isBusy()))) {
                 OpModeReference.telemetry.addData("target ticks", targetTicks);
-                OpModeReference.telemetry.addData("right current", FR.getCurrentPosition());
-                OpModeReference.telemetry.addData("left current", FL.getCurrentPosition());
+//                OpModeReference.telemetry.addData("right current", FR.getCurrentPosition());
+//                OpModeReference.telemetry.addData("left current", FL.getCurrentPosition());
                 OpModeReference.telemetry.update();
             }
 
@@ -389,13 +388,13 @@ public class HestiaTheRobot
         double speed = OpModeReference.gamepad1.left_stick_y / Math.sqrt(2);
         double strafe = OpModeReference.gamepad1.left_stick_x;
         double rotate = OpModeReference.gamepad1.right_stick_x;
-        double movingSpeed = 0.6;
+        double movingSpeed;
 
         if (OpModeReference.gamepad1.left_bumper) {
-            movingSpeed = 0.3;
+            movingSpeed = 0.4;
         }
         else {
-            movingSpeed = 0.6;
+            movingSpeed = 0.8;
         }
 
         double leftFrontDir = Range.clip((speed - strafe - rotate), -1, 1) * movingSpeed;

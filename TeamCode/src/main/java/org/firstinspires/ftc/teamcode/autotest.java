@@ -30,7 +30,15 @@ public class autotest extends LinearOpMode {
 
         waitForStart();
 
+        hestia.drive(24, 0.25);
 
+        hestia.strafeLeft(24, 0.25);
+
+        hestia.drive(-24, 0.25);
+
+        hestia.strafeRight(24, 0.25);
+
+        hestia.turn(90, 0.25);
 
     }
 }
