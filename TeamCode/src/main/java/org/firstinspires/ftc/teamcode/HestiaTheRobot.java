@@ -55,8 +55,8 @@ public class HestiaTheRobot
     public DcMotor BR = null;
 
     public Servo Towtruck = null;
-    public CRServo SL = null;
-    public CRServo SR = null;
+    public DcMotor SL = null;
+    public DcMotor SR = null;
 
     // create arrays for your motors (change sizes to match YOUR number of motors)
     public DcMotor[] LeftMotors = new DcMotor[2];
@@ -93,8 +93,8 @@ public class HestiaTheRobot
         BR = OpModeReference.hardwareMap.get(DcMotor.class, "right_back");
         imu = OpModeReference.hardwareMap.get(BNO055IMU.class, "imu");
         Towtruck = OpModeReference.hardwareMap.get(Servo.class, "Towtruck");
-        SL = OpModeReference.hardwareMap.get(CRServo.class, "LeftSlurp");
-        SR = OpModeReference.hardwareMap.get(CRServo.class, "RightSlurp");
+        SL = OpModeReference.hardwareMap.get(DcMotor.class, "LeftSlurp");
+        SR = OpModeReference.hardwareMap.get(DcMotor.class, "RightSlurp");
 
         // initialize the IMU
         imu.initialize(parameters);
@@ -246,9 +246,9 @@ public class HestiaTheRobot
         if (targetAngleDifference < 0) {
             // turning right, so we want all right motors going backwards
             for (DcMotor m : RightMotors)
-                m.setPower(-power/2);
-            for (DcMotor m : LeftMotors)
                 m.setPower(power/2);
+            for (DcMotor m : LeftMotors)
+                m.setPower(-power/2);
             // sleep a tenth of a second
             // WARNING - not sure why this is needed - but sometimes right turns didn't work without
             OpModeReference.sleep(100);
@@ -261,15 +261,15 @@ public class HestiaTheRobot
                 // THIS CODE IS FOR STEPPING DOWN MOTOR POWER
                 if (!secondStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.75) {
                     for (DcMotor m : RightMotors)
-                        m.setPower(-power/4);
-                    for (DcMotor m : LeftMotors)
                         m.setPower(power/4);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(-power/4);
                     secondStepDownComplete = true;
                 } else if (!firstStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.50) {
                     for (DcMotor m : RightMotors)
-                        m.setPower(-power/2);
-                    for (DcMotor m : LeftMotors)
                         m.setPower(power/2);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(-power/2);
                     firstStepDownComplete = true;
                 }
 
@@ -283,9 +283,9 @@ public class HestiaTheRobot
         } else if (targetAngleDifference > 0) {
             // turning left so want all left motors going backwards
             for (DcMotor m : RightMotors)
-                m.setPower(power);
-            for (DcMotor m : LeftMotors)
                 m.setPower(-power);
+            for (DcMotor m : LeftMotors)
+                m.setPower(power);
 
             // WARNING not sure if this sleep is needed - seemed necessary for right turns
             OpModeReference.sleep (100);
@@ -298,15 +298,15 @@ public class HestiaTheRobot
                 // THIS CODE IS FOR STEPPING DOWN MOTOR POWER
                 if (!secondStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.75) {
                     for (DcMotor m : RightMotors)
-                        m.setPower(power/4);
-                    for (DcMotor m : LeftMotors)
                         m.setPower(-power/4);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(power/4);
                     secondStepDownComplete = true;
                 } else if (!firstStepDownComplete && GetAngleDifference(startAngle) / targetAngleDifference > 0.50) {
                     for (DcMotor m : RightMotors)
-                        m.setPower(power/2);
-                    for (DcMotor m : LeftMotors)
                         m.setPower(-power/2);
+                    for (DcMotor m : LeftMotors)
+                        m.setPower(power/2);
                     firstStepDownComplete = true;
                 }
                 OpModeReference.telemetry.addData("target", targetAngleDifference);
@@ -385,6 +385,7 @@ public class HestiaTheRobot
 
     public void mecanum () {
 
+
         double speed = OpModeReference.gamepad1.left_stick_y / Math.sqrt(2);
         double strafe = OpModeReference.gamepad1.left_stick_x;
         double rotate = OpModeReference.gamepad1.right_stick_x;
@@ -412,26 +413,47 @@ public class HestiaTheRobot
 //        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
     }
 
-    public void TowtruckControl () {
+    public void TowtruckControl (boolean twoDrivers) {
         double TTpos;
-        if (OpModeReference.gamepad1.right_bumper)
-            TTpos = 0.5;
-        else
-            TTpos = 0.1;
+            if (twoDrivers) {
+                if (OpModeReference.gamepad2.right_bumper)
+                    TTpos = 0.5;
+                else
+                    TTpos = 0.1;
+            }
+            else {
+                if (OpModeReference.gamepad1.right_bumper)
+                    TTpos = 0.5;
+                else
+                    TTpos = 0.1;
+            }
         Towtruck.setPosition(TTpos);
         OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
     }
 
-    public void SlurpyIntake() {
+    public void SlurpyIntake(boolean twoDrivers) {
         double power = 0;
-        if (OpModeReference.gamepad1.right_trigger > 0.1 && OpModeReference.gamepad1.left_trigger < 0.1) {
-            power = 1;
-        }
-        else if (OpModeReference.gamepad1.right_trigger < 0.1 && OpModeReference.gamepad1.left_trigger > 0.1) {
-            power = -1;
+        if (twoDrivers){
+            if (OpModeReference.gamepad2.right_trigger > 0.1 && OpModeReference.gamepad2.left_trigger < 0.1) {
+                power = 0.5;
+            }
+            else if (OpModeReference.gamepad2.right_trigger < 0.1 && OpModeReference.gamepad2.left_trigger > 0.1) {
+                power = -0.5;
+            }
+            else {
+                power = 0;
+            }
         }
         else {
-            power = 0;
+            if (OpModeReference.gamepad1.right_trigger > 0.1 && OpModeReference.gamepad1.left_trigger < 0.1) {
+                power = 0.5;
+            }
+            else if (OpModeReference.gamepad1.right_trigger < 0.1 && OpModeReference.gamepad1.left_trigger > 0.1) {
+                power = -0.5;
+            }
+            else {
+                power = 0;
+            }
         }
         SL.setPower(power);
         SR.setPower(power);

@@ -38,20 +38,21 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="Better Drive", group="Linear Opmode")
-public class BetterDrive extends LinearOpMode {
+@TeleOp(name="One Driver", group="Linear Opmode")
+public class OneDriver extends LinearOpMode {
 
 
     @Override
     public void runOpMode() {
+        boolean twoDrivers = false;
         HestiaTheRobot hestia = new HestiaTheRobot(this);
         hestia.initialize();
         waitForStart();
 
         while (opModeIsActive()){
             hestia.mecanum();
-            hestia.TowtruckControl();
-            hestia.SlurpyIntake();
+            hestia.TowtruckControl(twoDrivers);
+            hestia.SlurpyIntake(twoDrivers);
             telemetry.update();
         }
 
