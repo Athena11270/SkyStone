@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 /**
  * This is an OpMode that uses a hardware robot class
  */
-@Autonomous(name = "RightIn", group = "IMU1")
+@Autonomous(name = "RightIn_NoFoundation", group = "IMU1")
 public class RightInAuto extends LinearOpMode {
 
 

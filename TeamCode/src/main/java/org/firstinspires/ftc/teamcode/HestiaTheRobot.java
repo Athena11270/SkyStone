@@ -54,14 +54,17 @@ public class HestiaTheRobot
     public DcMotor BL = null;
     public DcMotor BR = null;
 
-    public Servo Towtruck = null;
     public DcMotor SL = null;
     public DcMotor SR = null;
+
+    public Servo RTowtruck = null;
+    public Servo LTowtruck = null;
 
     // create arrays for your motors (change sizes to match YOUR number of motors)
     public DcMotor[] LeftMotors = new DcMotor[2];
     public DcMotor[] RightMotors = new DcMotor[2];
     public DcMotor[] AllMotors = new DcMotor[4];
+    public Servo[] TowTruck = new Servo[2];
 
     // define and calculate constants...
     static final double     COUNTS_PER_MOTOR_REV    = 537.6;    // REV Hex HD 20:1
@@ -92,7 +95,8 @@ public class HestiaTheRobot
         BL = OpModeReference.hardwareMap.get(DcMotor.class, "left_back");
         BR = OpModeReference.hardwareMap.get(DcMotor.class, "right_back");
         imu = OpModeReference.hardwareMap.get(BNO055IMU.class, "imu");
-        Towtruck = OpModeReference.hardwareMap.get(Servo.class, "Towtruck");
+        LTowtruck = OpModeReference.hardwareMap.get(Servo.class, "LTow");
+        RTowtruck = OpModeReference.hardwareMap.get(Servo.class, "RTow");
         SL = OpModeReference.hardwareMap.get(DcMotor.class, "LeftSlurp");
         SR = OpModeReference.hardwareMap.get(DcMotor.class, "RightSlurp");
 
@@ -111,6 +115,9 @@ public class HestiaTheRobot
         AllMotors[1] = FR;
         AllMotors[2] = BL;
         AllMotors[3] = BR;
+        // towtruck
+        TowTruck[0] = RTowtruck;
+        TowTruck[1] = LTowtruck;
 
         // set the direction for all left, then all right motors
         for (DcMotor m : LeftMotors)
@@ -120,6 +127,9 @@ public class HestiaTheRobot
 
         SL.setDirection(CRServo.Direction.REVERSE);
         SR.setDirection(CRServo.Direction.FORWARD);
+
+        RTowtruck.setDirection(Servo.Direction.FORWARD);
+        LTowtruck.setDirection(Servo.Direction.REVERSE);
 
         // set any properties that apply to ALL motors
         for (DcMotor m : AllMotors) {
@@ -132,6 +142,20 @@ public class HestiaTheRobot
     public void stopDriving() {
         for (DcMotor m : AllMotors)
             m.setPower(0);
+    }
+
+    public void servoTest() {
+        for (Servo s : TowTruck){
+            s.setPosition(-1);
+        }
+        OpModeReference.sleep(1000);
+        for (Servo s : TowTruck){
+            s.setPosition(1);
+        }
+        OpModeReference.sleep(2000);
+
+//        OpModeReference.telemetry.addData("right", RTowtruck.getPosition());
+//        OpModeReference.telemetry.addData("left", LTowtruck.getPosition());
     }
 
     // this is a drive method - takes speed and inches
@@ -225,6 +249,15 @@ public class HestiaTheRobot
             for (DcMotor m : AllMotors)
                 m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
+    }
+
+    public void towtruck(boolean up){
+        if (up)
+            for (Servo s : TowTruck)
+                s.setPosition(-1);
+        else
+            for (Servo s : TowTruck)
+                s.setPosition(1);
     }
 
 
@@ -417,18 +450,19 @@ public class HestiaTheRobot
         double TTpos;
             if (twoDrivers) {
                 if (OpModeReference.gamepad2.right_bumper)
-                    TTpos = 0.5;
+                    TTpos = 1;
                 else
-                    TTpos = 0.1;
+                    TTpos = -1;
             }
             else {
                 if (OpModeReference.gamepad1.right_bumper)
-                    TTpos = 0.5;
+                    TTpos = 1;
                 else
-                    TTpos = 0.1;
+                    TTpos = -1;
             }
-        Towtruck.setPosition(TTpos);
-        OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
+        LTowtruck.setPosition(TTpos);
+        RTowtruck.setPosition(TTpos);
+//        OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
     }
 
     public void SlurpyIntake(boolean twoDrivers) {

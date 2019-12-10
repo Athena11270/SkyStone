@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 /**
  * This is an OpMode that uses a hardware robot class
  */
-@Autonomous(name = "LeftOut", group = "IMU1")
+@Autonomous(name = "LeftOut_NoFoundation", group = "IMU1")
 public class LeftOutAuto extends LinearOpMode {
 
 
