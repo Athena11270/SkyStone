@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 /**
  * This is an OpMode that uses a hardware robot class
  */
-@Autonomous(name = "BlueIn_Foundation", group = "IMU1")
-public class BlueInAuto extends LinearOpMode {
+@Autonomous(name = "BlueOut_Foundation", group = "IMU1")
+public class BlueOutAuto extends LinearOpMode {
 
 
     @Override
@@ -37,9 +37,5 @@ public class BlueInAuto extends LinearOpMode {
         sleep(1000);
 
         hestia.strafeLeft(30, 0.25);
-
-        hestia.drive(-24, 0.25);
-
-        hestia.strafeLeft(24, 0.25);
     }
 }

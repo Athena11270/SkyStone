@@ -211,7 +211,7 @@ public class HestiaTheRobot
         if (OpModeReference.opModeIsActive()) {
 
             // calculate the number of ticks you want to travel (cast to integer)
-            int targetTicks = (int) (COUNTS_PER_INCH * -inches);
+            int targetTicks = (int) (COUNTS_PER_INCH * inches * (-12/11));
 
             // reset ticks to 0 on all motors
             for (DcMotor m : AllMotors)
