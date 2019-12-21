@@ -32,6 +32,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 /**
  * This is NOT an opmode.
@@ -45,8 +46,16 @@ import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
 
 
-public class HestiaTheRobot
-{
+public class HestiaTheRobot {
+
+    RevBlinkinLedDriver.BlinkinPattern pattern;
+    Telemetry.Item patternName;
+    Telemetry.Item display;
+//    LED.DisplayKind displayKind;
+    Deadline ledCycleDeadline;
+    Deadline gamepadRateLimit;
+    int blinko = 1;
+
     // declare hardware imu, motors, servos, sensors
     BNO055IMU imu;
     public DcMotor FL = null;
@@ -59,6 +68,9 @@ public class HestiaTheRobot
 
     public Servo RTowtruck = null;
     public Servo LTowtruck = null;
+    public Servo PC = null;
+
+    public RevBlinkinLedDriver RBD = null;
 
     // create arrays for your motors (change sizes to match YOUR number of motors)
     public DcMotor[] LeftMotors = new DcMotor[2];
@@ -99,6 +111,8 @@ public class HestiaTheRobot
         RTowtruck = OpModeReference.hardwareMap.get(Servo.class, "RTow");
         SL = OpModeReference.hardwareMap.get(DcMotor.class, "LeftSlurp");
         SR = OpModeReference.hardwareMap.get(DcMotor.class, "RightSlurp");
+        PC = OpModeReference.hardwareMap.get(Servo.class, "Pacafacado");
+        RBD = OpModeReference.hardwareMap.get(RevBlinkinLedDriver.class, "PrettyBoi");
 
         // initialize the IMU
         imu.initialize(parameters);
@@ -463,6 +477,40 @@ public class HestiaTheRobot
         LTowtruck.setPosition(TTpos);
         RTowtruck.setPosition(TTpos);
 //        OpModeReference.telemetry.addData("Towtruck Position", Towtruck.getPosition());
+    }
+
+    public void ColorControl(boolean twoDrivers) {
+        //1 = y, 2 = b, 3 = a, 4 = x
+        if (twoDrivers) {
+            if (OpModeReference.gamepad2.y)
+                blinko = 1;
+            else if (OpModeReference.gamepad2.b)
+                blinko = 2;
+            else if (OpModeReference.gamepad2.a)
+                blinko = 3;
+            else if (OpModeReference.gamepad2.x)
+                blinko = 4;
+        }
+        else {
+            if (OpModeReference.gamepad1.y)
+                blinko = 1;
+            else if (OpModeReference.gamepad1.b)
+                blinko = 2;
+            else if (OpModeReference.gamepad1.a)
+                blinko = 3;
+            else if (OpModeReference.gamepad1.x)
+                blinko = 4;
+        }
+
+
+        if (blinko == 1)
+            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE);
+        else if (blinko == 2)
+            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_LAVA_PALETTE);
+        else if (blinko == 3)
+            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE);
+        else if (blinko == 4)
+            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_OCEAN_PALETTE);
     }
 
     public void SlurpyIntake(boolean twoDrivers) {
