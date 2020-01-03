@@ -10,6 +10,7 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -35,9 +36,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+
+import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
+import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 /**
  * This is NOT an opmode.
@@ -52,6 +61,46 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 
 public class HestiaTheRobot {
+
+    private VuforiaTrackables targetsSkyStone;
+    private VuforiaTrackable stoneTarget;
+
+    public static final int skystonePositionLeft = 1;
+    public static final int skystonePositionMiddle = 2;
+    public static final int skystonePositionRight = 3;
+
+    //vuforia constants
+
+    // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
+    // We will define some constants and conversions here
+    private static final float mmPerInch        = 25.4f;
+    private static final float mmTargetHeight   = (6) * mmPerInch;          // the height of the center of the target image above the floor
+
+    // Constant for Stone Target
+    private static final float stoneZ = 2.00f * mmPerInch;
+
+    // Constants for the center support targets
+    private static final float bridgeZ = 6.42f * mmPerInch;
+    private static final float bridgeY = 23 * mmPerInch;
+    private static final float bridgeX = 5.18f * mmPerInch;
+    private static final float bridgeRotY = 59;                                 // Units are degrees
+    private static final float bridgeRotZ = 180;
+
+    // Constants for perimeter targets
+    private static final float halfField = 72 * mmPerInch;
+    private static final float quadField  = 36 * mmPerInch;
+
+    // Class Members
+    private VuforiaLocalizer vuforia = null;
+    //private boolean targetVisible = false;
+    private float phoneXRotate    = 0;
+    private float phoneYRotate    = 0;
+    private float phoneZRotate    = 0;
+
+    private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
+    private static final boolean PHONE_IS_PORTRAIT = false;
+
+    public WebcamName Bobathy;
 
     RevBlinkinLedDriver.BlinkinPattern pattern;
     Telemetry.Item patternName;
@@ -82,10 +131,6 @@ public class HestiaTheRobot {
     public DcMotor[] RightMotors = new DcMotor[2];
     public DcMotor[] AllMotors = new DcMotor[4];
     public Servo[] TowTruck = new Servo[2];
-
-    OpenGLMatrix lastLocation = null;
-    VuforiaLocalizer vuforia;
-    WebcamName Bobathy;
 
     // define and calculate constants...
     static final double     COUNTS_PER_MOTOR_REV    = 537.6;    // REV Hex HD 20:1
@@ -124,11 +169,7 @@ public class HestiaTheRobot {
         RBD = OpModeReference.hardwareMap.get(RevBlinkinLedDriver.class, "PrettyBoi");
         Bobathy = OpModeReference.hardwareMap.get(WebcamName.class, "Webcam 1");
 
-        int cameraMonitorViewId = OpModeReference.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", OpModeReference.hardwareMap.appContext.getPackageName());
-        VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
-        Vparameters.vuforiaLicenseKey = "AcPQv4H/////AAABmXCnle3xh0z4tAEdh8LpWucayWmawE79cmUNsap4IFuqA7suOo5Odqz4mD/kZuTXUYkN/awNeKmApPNXf/dwAXZTvQOE9TZedxGhLufDk1J2ktECWCLqniXszZVxUUQBvVGeB/Kw1LC1cTSQiqDNh++tVrXJLc4Risp6GtNmFj/oi/Q+cmaAcBGmbSEWEHuBGy+oIX4LhM3u2N1mKSMRt8Ttb8GnC0WIkFAhZhXSMOtDYlvNDliLUQIvGzKlCaiVgceWwnwdkms8nCKYuhpzo6qIF19nUSYWOSuYOXiXkd29r5tLOYNFcTROUvSt2ClejznUzNeq3vjipIXuS6aJGzks6mjKR6sdswwU1lFnOJeB";
-        Vparameters.cameraName = Bobathy;
-        this.vuforia = ClassFactory.getInstance().createVuforia(Vparameters);
+
 
         // initialize the IMU
         imu.initialize(parameters);
@@ -168,6 +209,50 @@ public class HestiaTheRobot {
         }
 
         PC.setPosition(0.25);
+    }
+
+    public void CameraStart() {
+
+        int cameraMonitorViewId = OpModeReference.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", OpModeReference.hardwareMap.appContext.getPackageName());
+        VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+        Vparameters.vuforiaLicenseKey = "AcPQv4H/////AAABmXCnle3xh0z4tAEdh8LpWucayWmawE79cmUNsap4IFuqA7suOo5Odqz4mD/kZuTXUYkN/awNeKmApPNXf/dwAXZTvQOE9TZedxGhLufDk1J2ktECWCLqniXszZVxUUQBvVGeB/Kw1LC1cTSQiqDNh++tVrXJLc4Risp6GtNmFj/oi/Q+cmaAcBGmbSEWEHuBGy+oIX4LhM3u2N1mKSMRt8Ttb8GnC0WIkFAhZhXSMOtDYlvNDliLUQIvGzKlCaiVgceWwnwdkms8nCKYuhpzo6qIF19nUSYWOSuYOXiXkd29r5tLOYNFcTROUvSt2ClejznUzNeq3vjipIXuS6aJGzks6mjKR6sdswwU1lFnOJeB";
+        Vparameters.cameraName = Bobathy;
+        vuforia = ClassFactory.getInstance().createVuforia(Vparameters);
+        // Load the data sets for the trackable objects. These particular data
+        // sets are stored in the 'assets' part of our application.
+        targetsSkyStone = vuforia.loadTrackablesFromAsset("Skystone");
+        stoneTarget = targetsSkyStone.get(0);
+        stoneTarget.setName("Stone Target");
+        targetsSkyStone.activate();
+    }
+
+    public int FindSkystone() {
+        int pos = skystonePositionRight;
+        CameraStart();
+
+        long currentTime = System.currentTimeMillis();
+        long endTime = currentTime + 1500; // 3000ms = 3s
+        while (System.currentTimeMillis() < endTime) {
+            if (((VuforiaTrackableDefaultListener)stoneTarget.getListener()).isVisible()) {
+                OpModeReference.telemetry.addData("Visible Target", stoneTarget.getName());
+                //targetVisible = true;
+
+                // getUpdatedRobotLocation() will return null if no new information is available since
+                // the last time that call was made, or if the trackable is not currently visible.
+                OpenGLMatrix location = ((VuforiaTrackableDefaultListener) stoneTarget.getListener()).getVuforiaCameraFromTarget();
+
+                VectorF translation = location.getTranslation();
+                OpModeReference.telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                        translation.get(0), translation.get(1), translation.get(2));
+
+                if (translation.get(0) < 0)
+                    pos = skystonePositionLeft;
+                else
+                    pos = skystonePositionMiddle;
+                break;
+            }
+        }
+        return pos;
     }
 
     // just a method to stop driving

@@ -27,14 +27,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -84,8 +83,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 
 @TeleOp(name="SKYSTONE Vuforia Nav", group ="Concept")
-@Disabled
-public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
+public class vutest extends LinearOpMode {
 
     // IMPORTANT:  For Phone Camera, set 1) the camera source and 2) the orientation, based on how your phone is mounted:
     // 1) Camera Source.  Valid choices are:  BACK (behind screen) or FRONT (selfie side)
@@ -109,7 +107,7 @@ public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
      * and paste it in to your code on the next line, between the double quotes.
      */
     private static final String VUFORIA_KEY =
-            " -- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+            "AcPQv4H/////AAABmXCnle3xh0z4tAEdh8LpWucayWmawE79cmUNsap4IFuqA7suOo5Odqz4mD/kZuTXUYkN/awNeKmApPNXf/dwAXZTvQOE9TZedxGhLufDk1J2ktECWCLqniXszZVxUUQBvVGeB/Kw1LC1cTSQiqDNh++tVrXJLc4Risp6GtNmFj/oi/Q+cmaAcBGmbSEWEHuBGy+oIX4LhM3u2N1mKSMRt8Ttb8GnC0WIkFAhZhXSMOtDYlvNDliLUQIvGzKlCaiVgceWwnwdkms8nCKYuhpzo6qIF19nUSYWOSuYOXiXkd29r5tLOYNFcTROUvSt2ClejznUzNeq3vjipIXuS6aJGzks6mjKR6sdswwU1lFnOJeB";
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
@@ -298,8 +296,8 @@ public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
         final float CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
-                .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, phoneYRotate, phoneZRotate, phoneXRotate));
+                    .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
+                    .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, phoneYRotate, phoneZRotate, phoneXRotate));
 
         /**  Let all the trackable listeners know where the phone is.  */
         for (VuforiaTrackable trackable : allTrackables) {
