@@ -6,7 +6,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -31,6 +34,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
@@ -78,6 +83,10 @@ public class HestiaTheRobot {
     public DcMotor[] AllMotors = new DcMotor[4];
     public Servo[] TowTruck = new Servo[2];
 
+    OpenGLMatrix lastLocation = null;
+    VuforiaLocalizer vuforia;
+    WebcamName Bobathy;
+
     // define and calculate constants...
     static final double     COUNTS_PER_MOTOR_REV    = 537.6;    // REV Hex HD 20:1
     static final double     WHEEL_DIAMETER_INCHES   = 3.93701;     // For figuring circumference
@@ -113,6 +122,13 @@ public class HestiaTheRobot {
         SR = OpModeReference.hardwareMap.get(DcMotor.class, "RightSlurp");
         PC = OpModeReference.hardwareMap.get(Servo.class, "Pacafacado");
         RBD = OpModeReference.hardwareMap.get(RevBlinkinLedDriver.class, "PrettyBoi");
+        Bobathy = OpModeReference.hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        int cameraMonitorViewId = OpModeReference.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", OpModeReference.hardwareMap.appContext.getPackageName());
+        VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+        Vparameters.vuforiaLicenseKey = "AcPQv4H/////AAABmXCnle3xh0z4tAEdh8LpWucayWmawE79cmUNsap4IFuqA7suOo5Odqz4mD/kZuTXUYkN/awNeKmApPNXf/dwAXZTvQOE9TZedxGhLufDk1J2ktECWCLqniXszZVxUUQBvVGeB/Kw1LC1cTSQiqDNh++tVrXJLc4Risp6GtNmFj/oi/Q+cmaAcBGmbSEWEHuBGy+oIX4LhM3u2N1mKSMRt8Ttb8GnC0WIkFAhZhXSMOtDYlvNDliLUQIvGzKlCaiVgceWwnwdkms8nCKYuhpzo6qIF19nUSYWOSuYOXiXkd29r5tLOYNFcTROUvSt2ClejznUzNeq3vjipIXuS6aJGzks6mjKR6sdswwU1lFnOJeB";
+        Vparameters.cameraName = Bobathy;
+        this.vuforia = ClassFactory.getInstance().createVuforia(Vparameters);
 
         // initialize the IMU
         imu.initialize(parameters);
@@ -150,6 +166,8 @@ public class HestiaTheRobot {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
+
+        PC.setPosition(0.25);
     }
 
     // just a method to stop driving
@@ -511,6 +529,13 @@ public class HestiaTheRobot {
             RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE);
         else if (blinko == 4)
             RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_OCEAN_PALETTE);
+    }
+
+
+
+    //0.25 is up, 1 is down
+    public void SideHuggerControl (double pos) {
+        PC.setPosition(Range.clip(pos, 0.25, 1));
     }
 
     public void SlurpyIntake(boolean twoDrivers) {
