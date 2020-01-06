@@ -44,7 +44,7 @@ public class VuforiaTest extends LinearOpMode {
         hestia.initialize();
         waitForStart();
 
-        telemetry.addData("vu", hestia.FindSkystone());
+        telemetry.addData("vu", hestia.RedFindSkystone());
         telemetry.update();
         sleep(10000);
 

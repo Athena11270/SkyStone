@@ -208,7 +208,8 @@ public class HestiaTheRobot {
             m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
-        PC.setPosition(0.25);
+        towtruck(true);
+        SideHuggerControl(0.5);
     }
 
     public void CameraStart() {
@@ -223,15 +224,14 @@ public class HestiaTheRobot {
         targetsSkyStone = vuforia.loadTrackablesFromAsset("Skystone");
         stoneTarget = targetsSkyStone.get(0);
         stoneTarget.setName("Stone Target");
-        targetsSkyStone.activate();
     }
 
-    public int FindSkystone() {
+    public int BlueFindSkystone() {
         int pos = skystonePositionRight;
-        CameraStart();
+        targetsSkyStone.activate();
 
         long currentTime = System.currentTimeMillis();
-        long endTime = currentTime + 1500; // 3000ms = 3s
+        long endTime = currentTime + 2000; // 3000ms = 3s
         while (System.currentTimeMillis() < endTime) {
             if (((VuforiaTrackableDefaultListener)stoneTarget.getListener()).isVisible()) {
                 OpModeReference.telemetry.addData("Visible Target", stoneTarget.getName());
@@ -252,6 +252,42 @@ public class HestiaTheRobot {
                 break;
             }
         }
+        targetsSkyStone.deactivate();
+
+        return pos;
+    }
+
+    public int RedFindSkystone() {
+        int pos = skystonePositionLeft;
+        targetsSkyStone.activate();
+
+        long currentTime = System.currentTimeMillis();
+        long endTime = currentTime + 2000; // 3000ms = 3s
+        while (System.currentTimeMillis() < endTime) {
+            OpModeReference.telemetry.addData("TimeInWhile", endTime - System.currentTimeMillis());
+            OpModeReference.telemetry.update();
+            if (((VuforiaTrackableDefaultListener)stoneTarget.getListener()).isVisible()) {
+                OpModeReference.telemetry.addData("Visible Target", stoneTarget.getName());
+                //targetVisible = true;
+
+                // getUpdatedRobotLocation() will return null if no new information is available since
+                // the last time that call was made, or if the trackable is not currently visible.
+                OpenGLMatrix location = ((VuforiaTrackableDefaultListener) stoneTarget.getListener()).getVuforiaCameraFromTarget();
+
+                VectorF translation = location.getTranslation();
+                OpModeReference.telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                        translation.get(0), translation.get(1), translation.get(2));
+                OpModeReference.telemetry.update();
+
+                if (translation.get(0) < 0)
+                    pos = skystonePositionMiddle;
+                else
+                    pos = skystonePositionRight;
+                break;
+            }
+        }
+        targetsSkyStone.deactivate();
+
         return pos;
     }
 
@@ -618,9 +654,9 @@ public class HestiaTheRobot {
 
 
 
-    //0.25 is up, 1 is down
+    //0.5 is up, 1 is down
     public void SideHuggerControl (double pos) {
-        PC.setPosition(Range.clip(pos, 0.25, 1));
+        PC.setPosition(Range.clip(pos, 0.5, 1));
     }
 
     public void SlurpyIntake(boolean twoDrivers) {
