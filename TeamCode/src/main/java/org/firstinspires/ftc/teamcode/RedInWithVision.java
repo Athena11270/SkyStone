@@ -43,7 +43,7 @@ public class RedInWithVision extends LinearOpMode {
 
             hestia.drive(6, speed);
 
-        hestia.strafeLeft(14, speed);
+        hestia.strafeLeft(12, speed);
 
         //makes sure it has block
 
@@ -61,7 +61,7 @@ public class RedInWithVision extends LinearOpMode {
 
         //moves away from blocks so it doesnt hit bridge
 
-        hestia.strafeRight(13, speed);
+        hestia.strafeRight(11, speed);
 
         //drives through bridge
 
@@ -87,7 +87,7 @@ public class RedInWithVision extends LinearOpMode {
 
         hestia.drive(-(92 - (blockPos * 8)), 0.7);
 
-        hestia.strafeLeft(13, speed);
+        hestia.strafeLeft(11, speed);
 
         //makes sure it has block again
 

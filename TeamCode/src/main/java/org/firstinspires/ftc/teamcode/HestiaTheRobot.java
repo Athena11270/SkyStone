@@ -47,6 +47,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 /**
  * This is NOT an opmode.
@@ -64,6 +65,8 @@ public class HestiaTheRobot {
 
     private VuforiaTrackables targetsSkyStone;
     private VuforiaTrackable stoneTarget;
+
+    int blinko;
 
     public static final int skystonePositionLeft = 1;
     public static final int skystonePositionMiddle = 2;
@@ -102,14 +105,6 @@ public class HestiaTheRobot {
 
     public WebcamName Bobathy;
 
-    RevBlinkinLedDriver.BlinkinPattern pattern;
-    Telemetry.Item patternName;
-    Telemetry.Item display;
-//    LED.DisplayKind displayKind;
-    Deadline ledCycleDeadline;
-    Deadline gamepadRateLimit;
-    int blinko = 1;
-
     // declare hardware imu, motors, servos, sensors
     BNO055IMU imu;
     public DcMotor FL = null;
@@ -124,7 +119,8 @@ public class HestiaTheRobot {
     public Servo LTowtruck = null;
     public Servo PC = null;
 
-    public RevBlinkinLedDriver RBD = null;
+    RevBlinkinLedDriver blinkinLedDriver;
+    RevBlinkinLedDriver.BlinkinPattern pattern;
 
     // create arrays for your motors (change sizes to match YOUR number of motors)
     public DcMotor[] LeftMotors = new DcMotor[2];
@@ -166,8 +162,9 @@ public class HestiaTheRobot {
         SL = OpModeReference.hardwareMap.get(DcMotor.class, "LeftSlurp");
         SR = OpModeReference.hardwareMap.get(DcMotor.class, "RightSlurp");
         PC = OpModeReference.hardwareMap.get(Servo.class, "Pacafacado");
-        RBD = OpModeReference.hardwareMap.get(RevBlinkinLedDriver.class, "PrettyBoi");
         Bobathy = OpModeReference.hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        blinkinLedDriver = OpModeReference.hardwareMap.get(RevBlinkinLedDriver.class, "PrettyBoi");
 
 
 
@@ -210,10 +207,12 @@ public class HestiaTheRobot {
 
         towtruck(true);
         SideHuggerControl(0.5);
+        blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE);
+
     }
 
     public void CameraStart() {
-
+        blinkinLedDriver.close();
         int cameraMonitorViewId = OpModeReference.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", OpModeReference.hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         Vparameters.vuforiaLicenseKey = "AcPQv4H/////AAABmXCnle3xh0z4tAEdh8LpWucayWmawE79cmUNsap4IFuqA7suOo5Odqz4mD/kZuTXUYkN/awNeKmApPNXf/dwAXZTvQOE9TZedxGhLufDk1J2ktECWCLqniXszZVxUUQBvVGeB/Kw1LC1cTSQiqDNh++tVrXJLc4Risp6GtNmFj/oi/Q+cmaAcBGmbSEWEHuBGy+oIX4LhM3u2N1mKSMRt8Ttb8GnC0WIkFAhZhXSMOtDYlvNDliLUQIvGzKlCaiVgceWwnwdkms8nCKYuhpzo6qIF19nUSYWOSuYOXiXkd29r5tLOYNFcTROUvSt2ClejznUzNeq3vjipIXuS6aJGzks6mjKR6sdswwU1lFnOJeB";
@@ -227,6 +226,7 @@ public class HestiaTheRobot {
     }
 
     public int BlueFindSkystone() {
+        blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
         int pos = skystonePositionRight;
         targetsSkyStone.activate();
 
@@ -253,11 +253,12 @@ public class HestiaTheRobot {
             }
         }
         targetsSkyStone.deactivate();
-
+        blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE);
         return pos;
     }
 
     public int RedFindSkystone() {
+        blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
         int pos = skystonePositionLeft;
         targetsSkyStone.activate();
 
@@ -287,6 +288,7 @@ public class HestiaTheRobot {
             }
         }
         targetsSkyStone.deactivate();
+        blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE);
 
         return pos;
     }
@@ -643,13 +645,13 @@ public class HestiaTheRobot {
 
 
         if (blinko == 1)
-            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE);
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE);
         else if (blinko == 2)
-            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_LAVA_PALETTE);
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_LAVA_PALETTE);
         else if (blinko == 3)
-            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE);
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_FOREST_PALETTE);
         else if (blinko == 4)
-            RBD.setPattern(RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_OCEAN_PALETTE);
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_OCEAN_PALETTE);
     }
 
 

@@ -48,6 +48,7 @@ public class TwoDrivers extends LinearOpMode {
             hestia.mecanum();
             hestia.TowtruckControl(twoDrivers);
             hestia.SlurpyIntake(twoDrivers);
+            hestia.ColorControl(twoDrivers);
             telemetry.update();
         }
 
