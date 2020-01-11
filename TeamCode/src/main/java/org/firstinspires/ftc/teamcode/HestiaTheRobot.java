@@ -372,12 +372,10 @@ public class HestiaTheRobot {
             for (DcMotor m : AllMotors)
                 m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-            // set target position on all motors
-            // mode must be changed to RUN_TO_POSITION
-            for(DcMotor m : AllMotors) {
-
+            // set target position on all motors - mode must be changed to RUN_TO_POSITION
+            for(DcMotor m : AllMotors)
                 m.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            }
+
             FL.setTargetPosition(targetTicks);
             FR.setTargetPosition(-targetTicks);
             BL.setTargetPosition(-targetTicks);
@@ -387,9 +385,7 @@ public class HestiaTheRobot {
             for (DcMotor m : AllMotors)
                 m.setPower(speed/Math.sqrt(2));
 
-
-            // just keep looping while both motors are busy
-            // stop if driver station stop button pushed
+            // just keep looping while both motors are busy - stop if driver station stop button pushed
             while (OpModeReference.opModeIsActive() && ((FL.isBusy() && FR.isBusy()) && (BL.isBusy() && BR.isBusy()))) {
                 OpModeReference.telemetry.addData("target ticks", targetTicks);
 //                OpModeReference.telemetry.addData("right current", FR.getCurrentPosition());
