@@ -43,7 +43,7 @@ public class BlueInWithVision extends LinearOpMode {
 
             hestia.drive(13, speed);
 
-        hestia.strafeLeft(12, speed);
+        hestia.strafeLeft(13, speed);
 
         //makes sure it has block
 
@@ -61,11 +61,11 @@ public class BlueInWithVision extends LinearOpMode {
 
         //moves away from blocks so it doesnt hit bridge
 
-        hestia.strafeRight(11, speed);
+        hestia.strafeRight(12.5, speed);
 
         //drives through bridge
 
-        hestia.drive(-63 - (blockPos * 8), 0.7);
+        hestia.drive(-(24 + (blockPos * 8)), 0.7);
 
         hestia.drive(-8, speed);
 
@@ -75,17 +75,17 @@ public class BlueInWithVision extends LinearOpMode {
 
         hestia.strafeLeft(10, 0.25);
 
-        hestia.strafeRight(7, 0.25);
+        hestia.strafeRight(6.5, 0.25);
 
         //her arm can't reach the block when it's [X][ ][ ], so this just makes her go for the middle one
 
-        if (blockPos == 1)
+        if (blockPos == 3)
 
-            blockPos += 1;
+            blockPos -= 1;
 
         //grabs other block
 
-        hestia.drive(92 - (blockPos * 8), 0.7);
+        hestia.drive(56 + (blockPos * 8), 0.7);
 
         hestia.strafeLeft(11, speed);
 
@@ -105,9 +105,9 @@ public class BlueInWithVision extends LinearOpMode {
 
         //goes to other side again
 
-        hestia.strafeRight(11, speed);
+        hestia.strafeRight(14, speed);
 
-        hestia.drive(-(92 - (blockPos * 8)), 0.7);
+        hestia.drive(-(56 + (blockPos * 8)), 0.7);
 
         //sets down block
 
@@ -119,7 +119,7 @@ public class BlueInWithVision extends LinearOpMode {
 
         //gets over line
 
-        hestia.drive(-18, 0.4);
+        hestia.drive( 18, 0.4);
 
         hestia.strafeLeft(6, 0.25);
 

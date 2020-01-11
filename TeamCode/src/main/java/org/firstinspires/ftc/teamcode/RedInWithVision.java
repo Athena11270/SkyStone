@@ -23,13 +23,11 @@ public class RedInWithVision extends LinearOpMode {
 
         waitForStart();
 
-        hestia.strafeLeft(12,speed);
-
-        hestia.drive(-2, 0.25);
+        hestia.strafeLeft(14,speed);
 
         int blockPos = hestia.RedFindSkystone();
 
-        hestia.strafeLeft(10, speed);
+        hestia.strafeLeft(6, speed);
 
         if (blockPos == 1)
 
@@ -49,15 +47,15 @@ public class RedInWithVision extends LinearOpMode {
 
         hestia.SideHuggerControl(1);
 
-        hestia.drive(2, 0.25);
+        hestia.drive(-2, 0.25);
 
         hestia.SideHuggerControl(1);
 
-        hestia.drive(-4, 0.25);
+        hestia.drive(4, 0.25);
 
         hestia.SideHuggerControl(1);
 
-        hestia.drive(2, 0.25);
+        hestia.drive(-2, 0.25);
 
         //moves away from blocks so it doesnt hit bridge
 

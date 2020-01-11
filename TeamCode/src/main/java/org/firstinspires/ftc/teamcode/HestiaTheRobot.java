@@ -231,7 +231,7 @@ public class HestiaTheRobot {
         targetsSkyStone.activate();
 
         long currentTime = System.currentTimeMillis();
-        long endTime = currentTime + 2000; // 3000ms = 3s
+        long endTime = currentTime + 3000; // 3000ms = 3s
         while (System.currentTimeMillis() < endTime) {
             if (((VuforiaTrackableDefaultListener)stoneTarget.getListener()).isVisible()) {
                 OpModeReference.telemetry.addData("Visible Target", stoneTarget.getName());
@@ -263,7 +263,7 @@ public class HestiaTheRobot {
         targetsSkyStone.activate();
 
         long currentTime = System.currentTimeMillis();
-        long endTime = currentTime + 2000; // 3000ms = 3s
+        long endTime = currentTime + 3000; // 3000ms = 3s
         while (System.currentTimeMillis() < endTime) {
             OpModeReference.telemetry.addData("TimeInWhile", endTime - System.currentTimeMillis());
             OpModeReference.telemetry.update();
