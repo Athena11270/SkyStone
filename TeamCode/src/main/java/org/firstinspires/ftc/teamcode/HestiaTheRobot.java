@@ -569,7 +569,7 @@ public class HestiaTheRobot {
 
     public void mecanum () {
 
-
+        // equalizing forwards velocity in reletivity to the strafing speed
         double speed = OpModeReference.gamepad1.left_stick_y / Math.sqrt(2);
         double strafe = OpModeReference.gamepad1.left_stick_x;
         double rotate = OpModeReference.gamepad1.right_stick_x;
@@ -591,10 +591,6 @@ public class HestiaTheRobot {
         FR.setPower(rightFrontDir);
         BL.setPower(leftBackDir);
         BR.setPower(rightBackDir);
-
-//        OpModeReference.telemetry.addData("Central Velocity", speed*movingSpeed);
-//        OpModeReference.telemetry.addData("Lateral Velocity", strafe*movingSpeed);
-//        OpModeReference.telemetry.addData("Rotation", rotate*movingSpeed);
     }
 
     public void TowtruckControl (boolean twoDrivers) {
