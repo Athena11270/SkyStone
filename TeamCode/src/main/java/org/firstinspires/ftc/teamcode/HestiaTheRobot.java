@@ -665,10 +665,10 @@ public class HestiaTheRobot {
         double power = 0;
         if (twoDrivers){
             if (OpModeReference.gamepad2.right_trigger > 0.1 && OpModeReference.gamepad2.left_trigger < 0.1) {
-                power = 0.5;
+                power = 0.35;
             }
             else if (OpModeReference.gamepad2.right_trigger < 0.1 && OpModeReference.gamepad2.left_trigger > 0.1) {
-                power = -0.5;
+                power = -0.35;
             }
             else {
                 power = 0;
@@ -676,10 +676,10 @@ public class HestiaTheRobot {
         }
         else {
             if (OpModeReference.gamepad1.right_trigger > 0.1 && OpModeReference.gamepad1.left_trigger < 0.1) {
-                power = 0.5;
+                power = 0.35;
             }
             else if (OpModeReference.gamepad1.right_trigger < 0.1 && OpModeReference.gamepad1.left_trigger > 0.1) {
-                power = -0.5;
+                power = -0.35;
             }
             else {
                 power = 0;

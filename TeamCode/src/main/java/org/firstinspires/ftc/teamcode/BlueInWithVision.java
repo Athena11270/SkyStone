@@ -107,7 +107,7 @@ public class BlueInWithVision extends LinearOpMode {
 
         hestia.strafeRight(14, speed);
 
-        hestia.drive(-(56 + (blockPos * 8)), 0.7);
+        hestia.drive(-(56  + (blockPos * 8)), 0.7);
 
         //sets down block
 
